@@ -1,6 +1,6 @@
 // Template for Northwestern - CompEng 361 - Lab4 
-// Groupname:
-// NetIDs:
+// Groupname: WeisiHouxuan
+// NetIDs: hgg8403, loe3291
 
 // Some useful defines...please add your own
 `define WORD_WIDTH 32
