@@ -101,11 +101,11 @@ module PipelinedCPU(halt, clk, rst);
    wire Foward_Rdata1_D, Foward_Rdata2_D;
    
 
-   wire invalid_op;
+   wire invalid_op_D, invalid_op_E, invalid_op_M, invalid_op_W;
    
    // Only support R-TYPE ADD and SUB
-   assign halt = invalid_op;
-   assign invalid_op = !(((opcode_D == `OPCODE_COMPUTE) || (opcode_D == `OPCODE_AUIPC)
+   assign halt = (!rst) ? 1'b0 : invalid_op_W;
+   assign invalid_op_D = !(((opcode_D == `OPCODE_COMPUTE) || (opcode_D == `OPCODE_AUIPC)
              || (opcode_D == `OPCODE_BRANCH) || (opcode_D == `OPCODE_IMM) || (opcode_D == `OPCODE_JAL)
              || (opcode_D == `OPCODE_JALR) || (opcode_D == `OPCODE_LOAD) || (opcode_D == `OPCODE_LUI) 
              || (opcode_D == `OPCODE_STORE)) && ((funct3_D == `FUNC_ADD) 
@@ -176,12 +176,12 @@ module PipelinedCPU(halt, clk, rst);
       .Rdata1(Rdata1_D), .Rdata2(Rdata2_D), .imm(imm_D), 
       .EUSrc(EUSrc_D), .Store_sel(Store_sel_D), .MemWrEn(MemWrEn_D), .Load_sel(Load_sel_D), .MemtoReg(MemtoReg_D), .RWr_sel(RWr_sel_D), .RWrEn(RWrEn_D), 
       .opcode(opcode_D), .funct3(funct3_D), .funct7(funct7_D), .Rsrc1(Rsrc1_D), .Rsrc2(Rsrc2_D), .Rdst(Rdst_D), 
-      .PC(PC_D),
+      .PC(PC_D), .invalid_op(invalid_op_D),
       
       .o_Rdata1(Rdata1_E), .o_Rdata2(Rdata2_E), .o_imm(imm_E),
       .o_EUSrc(EUSrc_E), .o_Store_sel(Store_sel_E), .o_MemWrEn(MemWrEn_E), .o_Load_sel(Load_sel_E), .o_MemtoReg(MemtoReg_E), .o_RWr_sel(RWr_sel_E), .o_RWrEn(RWrEn_E),
       .o_opcode(opcode_E), .o_funct3(funct3_E), .o_funct7(funct7_E), .o_Rsrc1(Rsrc1_E), .o_Rsrc2(Rsrc2_E), .o_Rdst(Rdst_E),
-      .o_PC(PC_E),
+      .o_PC(PC_E), .o_invalid_op(invalid_op_E),
       
       .clk(clk), .rst(rst), .WE(!stall), .Flush(Flush));
    
@@ -221,12 +221,12 @@ module PipelinedCPU(halt, clk, rst);
       .imm(imm_E), .ExecutionResult(ExecutionResult_E), .Rdata2(WriteData_E),
       .Store_sel(Store_sel_E), .MemWrEn(MemWrEn_E), .Load_sel(Load_sel_E), .MemtoReg(MemtoReg_E), .RWr_sel(RWr_sel_E), .RWrEn(RWrEn_E),
       .opcode(opcode_E), .funct3(funct3_E), .funct7(funct7_E), .Rsrc1(Rsrc1_E), .Rsrc2(Rsrc2_E), .Rdst(Rdst_E),
-      .PC(PC_E),
+      .PC(PC_E), .invalid_op(invalid_op_E),
       
       .o_imm(imm_M), .o_ExecutionResult(ExecutionResult_M), .o_Rdata2(Rdata2_M),
       .o_Store_sel(Store_sel_M), .o_MemWrEn(MemWrEn_M), .o_Load_sel(Load_sel_M), .o_MemtoReg(MemtoReg_M), .o_RWr_sel(RWr_sel_M), .o_RWrEn(RWrEn_M),
       .o_opcode(opcode_M), .o_funct3(funct3_M), .o_funct7(funct7_M), .o_Rsrc1(Rsrc1_M), .o_Rsrc2(Rsrc2_M), .o_Rdst(Rdst_M),
-      .o_PC(PC_M),
+      .o_PC(PC_M), .o_invalid_op(invalid_op_M),
       
       .clk(clk), .rst(rst), .is_long_latency_ex(is_long_latency_ex));
 
@@ -259,12 +259,12 @@ module PipelinedCPU(halt, clk, rst);
       .LoadData(LoadData_M), .ExecutionResult(ExecutionResult_M), .imm(imm_M),
       .MemtoReg(MemtoReg_M), .RWr_sel(RWr_sel_M), .RWrEn(RWrEn_M),
       .opcode(opcode_M), .funct3(funct3_M), .funct7(funct7_M), .Rsrc1(Rsrc1_M), .Rsrc2(Rsrc2_M), .Rdst(Rdst_M),
-      .PC(PC_M),
+      .PC(PC_M), .invalid_op(invalid_op_M),
 
       .o_LoadData(LoadData_W), .o_ExecutionResult(ExecutionResult_W), .o_imm(imm_W),
       .o_MemtoReg(MemtoReg_W), .o_RWr_sel(RWr_sel_W), .o_RWrEn(RWrEn_W),
       .o_opcode(opcode_W), .o_funct3(funct3_W), .o_funct7(funct7_W), .o_Rsrc1(Rsrc1_W), .o_Rsrc2(Rsrc2_W), .o_Rdst(Rdst_W),
-      .o_PC(PC_W),
+      .o_PC(PC_W), .o_invalid_op(invalid_op_W),
 
       .clk(clk), .rst(rst));
 
@@ -543,12 +543,12 @@ endmodule
 module ID_EX_REG(Rdata1, Rdata2, imm, 
 EUSrc, Store_sel, MemWrEn, Load_sel, MemtoReg, RWr_sel, RWrEn, 
 opcode, funct3, funct7, Rsrc1, Rsrc2, Rdst, 
-PC,
+PC, invalid_op,
 
 o_Rdata1, o_Rdata2, o_imm,
 o_EUSrc, o_Store_sel, o_MemWrEn, o_Load_sel, o_MemtoReg, o_RWr_sel, o_RWrEn,
 o_opcode, o_funct3, o_funct7, o_Rsrc1, o_Rsrc2, o_Rdst,
-o_PC,
+o_PC, o_invalid_op,
 
 clk, rst, WE, Flush);
       input [31:0] Rdata1, Rdata2, imm;
@@ -560,6 +560,7 @@ clk, rst, WE, Flush);
       input [2:0] funct3;
       input [4:0] Rsrc1, Rsrc2, Rdst;
       input [31:0] PC;
+      input invalid_op;
       output [31:0] o_Rdata1, o_Rdata2, o_imm;
       output o_EUSrc;
       output [1:0] o_Store_sel, o_RWr_sel;
@@ -570,6 +571,7 @@ clk, rst, WE, Flush);
       output [2:0] o_funct3;
       output [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       output [31:0] o_PC;
+      output o_invalid_op;
       input clk, rst, WE, Flush;
       reg [31:0] o_Rdata1, o_Rdata2, o_imm;
       reg o_EUSrc;
@@ -581,6 +583,7 @@ clk, rst, WE, Flush);
       reg [2:0] o_funct3;
       reg [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       reg [31:0] o_PC;
+      reg o_invalid_op;
       always @(negedge clk or negedge rst)
          if (!rst || Flush)
             begin
@@ -601,6 +604,7 @@ clk, rst, WE, Flush);
                o_Rsrc2 <= 5'b00000;
                o_Rdst <= 5'b00000;
                o_PC <= 32'h00000000;
+               o_invalid_op <= 1'b0;
             end
          else
             begin
@@ -623,6 +627,7 @@ clk, rst, WE, Flush);
                   o_Rsrc2 <= Rsrc2;
                   o_Rdst <= Rdst;
                   o_PC <= PC;
+                  o_invalid_op <= invalid_op;
                end
             end
 endmodule
@@ -630,12 +635,12 @@ endmodule
 module EX_MEM_REG(imm, ExecutionResult, Rdata2,
 Store_sel, MemWrEn, Load_sel, MemtoReg, RWr_sel, RWrEn,
 opcode, funct3, funct7, Rsrc1, Rsrc2, Rdst,
-PC,
+PC, invalid_op,
 
 o_imm, o_ExecutionResult, o_Rdata2,
 o_Store_sel, o_MemWrEn, o_Load_sel, o_MemtoReg, o_RWr_sel, o_RWrEn,
 o_opcode, o_funct3, o_funct7, o_Rsrc1, o_Rsrc2, o_Rdst,
-o_PC,
+o_PC, o_invalid_op,
 
 clk, rst, is_long_latency_ex);
       input [31:0] imm, ExecutionResult, Rdata2;
@@ -647,6 +652,7 @@ clk, rst, is_long_latency_ex);
       input [2:0] funct3;
       input [4:0] Rsrc1, Rsrc2, Rdst;
       input [31:0] PC;
+      input invalid_op;
       output [31:0] o_imm, o_ExecutionResult, o_Rdata2;
       output o_MemWrEn, o_MemtoReg, o_RWrEn;
       output [1:0] o_RWr_sel;
@@ -656,6 +662,7 @@ clk, rst, is_long_latency_ex);
       output [2:0] o_funct3;
       output [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       output [31:0] o_PC;
+      output o_invalid_op;
       input clk, rst, is_long_latency_ex;
       reg [31:0] o_imm, o_ExecutionResult, o_Rdata2;
       reg o_MemWrEn, o_MemtoReg, o_RWrEn;
@@ -666,6 +673,7 @@ clk, rst, is_long_latency_ex);
       reg [2:0] o_funct3;
       reg [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       reg [31:0] o_PC;
+      reg o_invalid_op;
       always @(negedge clk or negedge rst)
          if (!rst || is_long_latency_ex)
             begin
@@ -685,6 +693,7 @@ clk, rst, is_long_latency_ex);
                o_Rsrc2 <= 5'b00000;
                o_Rdst <= 5'b00000;
                o_PC <= 32'h00000000;
+               o_invalid_op <= 1'b0;
             end
          else
             begin
@@ -704,18 +713,19 @@ clk, rst, is_long_latency_ex);
                o_Rsrc2 <= Rsrc2;
                o_Rdst <= Rdst;
                o_PC <= PC;
+               o_invalid_op <= invalid_op;
             end
 endmodule
 
 module MEM_WB_REG(LoadData, ExecutionResult, imm,
 MemtoReg, RWr_sel, RWrEn,
 opcode, funct3, funct7, Rsrc1, Rsrc2, Rdst,
-PC,
+PC, invalid_op,
 
 o_LoadData, o_ExecutionResult, o_imm,
 o_MemtoReg, o_RWr_sel, o_RWrEn,
 o_opcode, o_funct3, o_funct7, o_Rsrc1, o_Rsrc2, o_Rdst,
-o_PC,
+o_PC, o_invalid_op,
 
 clk, rst);
       input [31:0] LoadData, ExecutionResult, imm;
@@ -725,6 +735,7 @@ clk, rst);
       input [2:0] funct3;
       input [4:0] Rsrc1, Rsrc2, Rdst;
       input [31:0] PC;
+      input invalid_op;
       output [31:0] o_LoadData, o_ExecutionResult, o_imm;
       output o_MemtoReg, o_RWrEn;
       output [1:0] o_RWr_sel;
@@ -732,6 +743,7 @@ clk, rst);
       output [2:0] o_funct3;
       output [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       output [31:0] o_PC;
+      output o_invalid_op;
       input clk, rst;
       reg [31:0] o_LoadData, o_ExecutionResult, o_imm;
       reg o_MemtoReg, o_RWrEn;
@@ -740,6 +752,7 @@ clk, rst);
       reg [2:0] o_funct3;
       reg [4:0] o_Rsrc1, o_Rsrc2, o_Rdst;
       reg [31:0] o_PC;
+      reg o_invalid_op;
       always @(negedge clk or negedge rst)
          if (!rst)
             begin
@@ -756,6 +769,7 @@ clk, rst);
                o_Rsrc2 <= 5'b00000;
                o_Rdst <= 5'b00000;
                o_PC <= 32'h00000000;
+               o_invalid_op <= 1'b0;
             end
          else
             begin
@@ -772,6 +786,7 @@ clk, rst);
                o_Rsrc2 <= Rsrc2;
                o_Rdst <= Rdst;
                o_PC <= PC;
+               o_invalid_op <= invalid_op;
             end
 endmodule
 
@@ -878,6 +893,6 @@ Flush);
                      (match_B_E_W) ? 2'b10 :
                      (match_B_E_M_ex) ? 2'b01 : 2'b00;
 
-   assign Flush = (opcode_E == `OPCODE_BRANCH && branch_taken) ? 1'b1 : 1'b0;
+   assign Flush = ((opcode_E == `OPCODE_BRANCH && branch_taken) || (opcode_E == `OPCODE_JAL || opcode_E == `OPCODE_JALR)) ? 1'b1 : 1'b0;
 
 endmodule

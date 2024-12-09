@@ -1,11 +1,11 @@
-b7 50 34 12    // 0:    lui    x1, 0x12345
+37 21 00 00    // 0:    lui    x2, 0x00002
 17 01 00 00    // 4:    auipc  x2, 0
-ef 01 00 00    // 8:    jal    x3, 4
+ef 01 40 00    // 8:    jal    x3, 4
 13 82 41 00    // 12:   addi   x4, x3, 4         (reads x3 from 8)
-e7 02 c2 00    // 16:   jalr   x5, x4, 12         (reads x4 from 12)
-03 83 00 00    // 44:   lb     x6, 0(x1)         (reads x1 from 0)
-83 93 20 00    // 48:   lh     x7, 2(x1)         (reads x1 from 0)
-03 a4 40 00    // 52:   lw     x8, 4(x1)         (reads x1 from 0)
+e7 02 c2 00    // 16:   jalr   x5, x4, 12        (reads x4 from 12)
+03 83 00 00    // 20:   lb     x6, 0(x1)         (reads x1 from 0)
+83 93 20 00    // 24:   lh     x7, 2(x1)         (reads x1 from 0)
+03 a4 40 00    // 28:   lw     x8, 4(x1)         (reads x1 from 0)
 83 c4 60 00    // 56:   lbu    x9, 6(x1)         (reads x1 from 0)
 03 d5 80 00    // 60:   lhu    x10,8(x1)         (reads x1 from 0)
 23 85 40 00    // 64:   sb     x4, 10(x1)        (reads x4 from 12, x1 from 0)
