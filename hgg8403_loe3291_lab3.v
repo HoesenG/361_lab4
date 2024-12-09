@@ -40,7 +40,7 @@
 `define SIZE_WORD  2'b10
 
 
-module SingleCycleCPU(halt, clk, rst);
+module PipelinedCPU(halt, clk, rst);
    output halt;
    input clk, rst;
 
@@ -158,7 +158,7 @@ module SingleCycleCPU(halt, clk, rst);
    assign PC_jalr = Result;
    MUX32_4_1 MUX_NPC(.a(PC_Plus_4), .b(PC_branch), .c(PC_jal), .d(PC_jalr), .sel(NPC_sel), .o(NPC));
    
-endmodule // SingleCycleCPU
+endmodule // PipelinedCPU
 
 // Incomplete version of Lab2 execution unit
 // You will need to extend it. Feel free to modify the interface also
